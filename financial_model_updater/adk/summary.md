@@ -1,0 +1,1 @@
+The Q4 revenue estimate of $1,500,000 has been incorporated into the financial model. The updated Internal Rate of Return (IRR) is approximately 12.37%.

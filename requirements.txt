@@ -1,0 +1,14 @@
+google-adk
+google-genai
+openpyxl
+pandas
+langchain
+langchain-google-vertexai
+langgraph
+langgraph-checkpoint
+google-cloud-aiplatform
+absl-py
+langchain-community
+langchain-openai
+duckduckgo-search
+python-dotenv

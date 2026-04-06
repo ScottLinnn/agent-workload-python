@@ -95,3 +95,4 @@ Workflow:
    python3 main.py --task=coding_agent_swe_bench --framework=adk --remote --agent_engine_id=xxx
    ```
 
+This will trigger both the agent running(which pushes changes to repo) + evaluation(pull changes from repo to run tests).

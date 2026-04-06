@@ -1,0 +1,19 @@
+{
+  "repo": "ScottLinnn/coding-agent-testing",
+  "instance_id": "ScottLinnn__coding-agent-testing-1",
+  "base_commit": "2c099736e4f3a9e3381e05a8b7538de3b53f478e",
+  "patch": "diff --git a/tests/missing_colon.py b/tests/missing_colon.py\n--- a/tests/missing_colon.py\n+++ b/tests/missing_colon.py\n@@ -1,4 +1,4 @@\n #!/usr/bin/env python3\n \n-def division(a: float, b: float) -> float\n+def division(a: float, b: float) -> float:\n     return a/b\n",
+  "test_patch": "diff --git a/tests/test_missing_colon.py b/tests/test_missing_colon.py\nnew file mode 100644\n--- /dev/null\n+++ b/tests/test_missing_colon.py\n@@ -0,0 +1,5 @@\n+import subprocess\n+import sys\n+\n+def test_script_execution():\n+    subprocess.check_call([sys.executable, \"tests/missing_colon.py\"])\n",
+  "problem_statement": "The script 'tests/missing_colon.py' has a SyntaxError due to a missing colon in the function definition of 'division'. Please fix it.",
+  "hints_text": "",
+  "created_at": "2026-04-03T19:15:00Z",
+  "version": "1.0",
+  "FAIL_TO_PASS": [
+    "tests/test_missing_colon.py::test_script_execution"
+  ],
+  "PASS_TO_PASS": [
+    "tests/test_nothing.py::test_nothing"
+  ],
+  "environment_setup_commit": "2c099736e4f3a9e3381e05a8b7538de3b53f478e",
+  "difficulty": "5 min"
+}

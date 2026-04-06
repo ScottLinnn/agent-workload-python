@@ -1,0 +1,17 @@
+{
+  "repo": "SWE-agent/test-repo",
+  "instance_id": "SWE-agent__test-repo-1",
+  "base_commit": "7bef0c62cce60a2cb6df0c80f18b3054e1c23630",
+  "patch": "diff --git a/tests/missing_colon.py b/tests/missing_colon.py\n--- a/tests/missing_colon.py\n+++ b/tests/missing_colon.py\n@@ -1,5 +1,5 @@\n #!/usr/bin/env python3\n \n \n-def division(a: float, b: float) -> float\n+def division(a: float, b: float) -> float:\n     return a/b",
+  "test_patch": "diff --git a/tests/test_missing_colon.py b/tests/test_missing_colon.py\nnew file mode 100644\n--- /dev/null\n+++ b/tests/test_missing_colon.py\n@@ -0,0 +1,7 @@\n+import subprocess\n+import sys\n+import pytest\n+\n+def test_script_execution():\n+    # Running the script should not raise a SyntaxError and should exit with code 0\n+    subprocess.check_call([sys.executable, \"tests/missing_colon.py\"])",
+  "problem_statement": "I'm running missing_colon.py as follows:\n\n```\nmissing_colon.py\n```\n\n\n```\ndivision(23, 0)\n```\n\nbut I get the following error:\n\n```\nFile \"/Users/fuchur/Documents/24/git_sync/swe-agent-test-repo/tests/./missing_colon.py\", line 4 def division(a: float, b: float) -> float ^ SyntaxError: invalid syntax\n```",
+  "hints_text": "",
+  "created_at": "2024-04-03T00:00:00Z",
+  "version": "1.0",
+  "FAIL_TO_PASS": [
+    "tests/missing_colon.py"
+  ],
+  "PASS_TO_PASS": [],
+  "environment_setup_commit": "7bef0c62cce60a2cb6df0c80f18b3054e1c23630",
+  "difficulty": "5 min"
+}

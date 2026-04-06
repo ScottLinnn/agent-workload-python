@@ -1,0 +1,17 @@
+{
+  "repo": "SWE-agent/test-repo",
+  "instance_id": "SWE-agent__test-repo-1",
+  "base_commit": "f9a5fa436f2759bf1a36ccc1300cb9a0a9434a86",
+  "patch": "diff --git a/tests/missing_colon.py b/tests/missing_colon.py\n--- a/tests/missing_colon.py\n+++ b/tests/missing_colon.py\n@@ -1,5 +1,5 @@\n #!/usr/bin/env python3\n \n \n-def division(a: float, b: float) -> float\n+def division(a: float, b: float) -> float:\n     return a/b\n",
+  "test_patch": "diff --git a/tests/test_issue.py b/tests/test_issue.py\nnew file mode 100644\n--- /dev/null\n+++ b/tests/test_issue.py\n@@ -0,0 +1,6 @@\n+import subprocess\n+import sys\n+\n+def test_missing_colon():\n+    # Running the script directly should fail if syntax is invalid\n+    subprocess.check_call([sys.executable, \"tests/missing_colon.py\"])\n",
+  "problem_statement": "The script 'tests/missing_colon.py' fails with a SyntaxError because of a missing colon in the function definition at line 4.",
+  "hints_text": "",
+  "created_at": "2024-04-03T00:00:00Z",
+  "version": "1.0",
+  "FAIL_TO_PASS": [
+    "tests/test_issue.py::test_missing_colon"
+  ],
+  "PASS_TO_PASS": [],
+  "environment_setup_commit": "f9a5fa436f2759bf1a36ccc1300cb9a0a9434a86",
+  "difficulty": "5 min"
+}

@@ -83,14 +83,15 @@ def run_task(task, framework):
 def main():
     parser = argparse.ArgumentParser(description="Run agentic-workload-python tasks")
     parser.add_argument("--task", type=str, required=True, 
-                        choices=["bug_triage", "fact_finder", "fact_finder_real_web", "financial_model_updater", "itinerary_planner", "coding_agent"], 
+                        choices=["bug_triage", "fact_finder", "fact_finder_real_web", "financial_model_updater", "itinerary_planner", "coding_agent_pkb", "coding_agent_swe_bench", "data_science"], 
                         help="Task to work on")
     parser.add_argument("--framework", type=str, required=True, 
                         choices=["adk", "langgraph"], 
                         help="Framework to use")
+    parser.add_argument("--remote", action="store_true", help="Run remotely using Vertex AI Agent Engine")
+    parser.add_argument("--agent_engine_id", type=str, default="6153237054697242624", help="Agent Engine resource ID")
     
-    args = parser.parse_args()
-    
+    args, _ = parser.parse_known_args()
     if run_task(args.task, args.framework):
         sys.exit(0)
     else:

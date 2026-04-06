@@ -1,9 +1,17 @@
-import argparse
 import asyncio
 import sys
 import os
 import importlib
 from dotenv import load_dotenv
+from absl import flags
+from absl import app
+
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string('task', None, 'Task to work on')
+flags.DEFINE_string('framework', None, 'Framework to use')
+flags.DEFINE_boolean('remote', False, 'Run remotely using Vertex AI Agent Engine')
+flags.DEFINE_string('agent_engine_id', None, 'Agent Engine resource ID')
 
 # Load environment variables from .env file
 load_dotenv()
@@ -17,8 +25,12 @@ def run_task(task, framework):
     
     # Loaded from .env or environment
     os.environ.setdefault('GOOGLE_GENAI_USE_VERTEXAI', '1')
-    os.environ.setdefault('GOOGLE_CLOUD_LOCATION', os.getenv('GOOGLE_CLOUD_LOCATION', 'us-central1'))
-    os.environ.setdefault('GOOGLE_CLOUD_PROJECT', os.getenv('GOOGLE_CLOUD_PROJECT'))
+    if not os.environ.get('GOOGLE_CLOUD_LOCATION'):
+        print("Error: GOOGLE_CLOUD_LOCATION must be set in environment or .env file.")
+        sys.exit(1)
+    if not os.environ.get('GOOGLE_CLOUD_PROJECT'):
+        print("Error: GOOGLE_CLOUD_PROJECT must be set in environment or .env file.")
+        sys.exit(1)
 
     if framework == "adk":
         # Import e2e_runner from adk folder
@@ -80,22 +92,35 @@ def run_task(task, framework):
             print(f"Error: Missing module for {task}: {e}")
             return False
 
-def main():
-    parser = argparse.ArgumentParser(description="Run agentic-workload-python tasks")
-    parser.add_argument("--task", type=str, required=True, 
-                        choices=["bug_triage", "fact_finder", "fact_finder_real_web", "financial_model_updater", "itinerary_planner", "coding_agent_pkb", "coding_agent_swe_bench", "data_science"], 
-                        help="Task to work on")
-    parser.add_argument("--framework", type=str, required=True, 
-                        choices=["adk", "langgraph"], 
-                        help="Framework to use")
-    parser.add_argument("--remote", action="store_true", help="Run remotely using Vertex AI Agent Engine")
-    parser.add_argument("--agent_engine_id", type=str, default="6153237054697242624", help="Agent Engine resource ID")
-    
-    args, _ = parser.parse_known_args()
-    if run_task(args.task, args.framework):
+def main(argv):
+    if not FLAGS.task:
+        print("Error: --task flag is required.")
+        sys.exit(1)
+    if not FLAGS.framework:
+        print("Error: --framework flag is required.")
+        sys.exit(1)
+
+    # Validation for remote
+    if FLAGS.remote:
+        valid = True
+        if FLAGS.framework != "adk":
+             print("Validation Error: Remote execution requires framework to be 'adk'.")
+             valid = False
+        if FLAGS.task != "coding_agent_swe_bench":
+             print("Validation Error: Remote execution requires task to be 'coding_agent_swe_bench'.")
+             valid = False
+        if not FLAGS.agent_engine_id:
+             print("Validation Error: Remote execution requires agent_engine_id to be supplied.")
+             valid = False
+             
+        if not valid:
+             print("Notice: More frameworks and more tasks will be supported in the future.")
+             sys.exit(1)
+
+    if run_task(FLAGS.task, FLAGS.framework):
         sys.exit(0)
     else:
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    app.run(main)

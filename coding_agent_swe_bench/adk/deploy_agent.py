@@ -1,18 +1,17 @@
+"""Script to deploy the coding agent to Vertex AI Agent Engine."""
+
 import asyncio
-import json
 import os
-import subprocess
 import sys
 from dotenv import load_dotenv
 
 load_dotenv()
 
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "1"
-os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
-os.environ.setdefault(
-    "GOOGLE_CLOUD_PROJECT",
-    os.getenv("GOOGLE_CLOUD_PROJECT", "p3rf-code-assist"),
-)
+if "GOOGLE_CLOUD_PROJECT" not in os.environ:
+  raise ValueError("GOOGLE_CLOUD_PROJECT environment variable must be set")
+if "GOOGLE_CLOUD_LOCATION" not in os.environ:
+  raise ValueError("GOOGLE_CLOUD_LOCATION environment variable must be set")
 os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = "false"
 
 sys.path.append(
@@ -57,7 +56,7 @@ async def main():
       agent=coding_agent,
       config=config,
   )
-  print(f"Successfully deployed Agent Engine!")
+  print("Successfully deployed Agent Engine!")
   print(f"Resource name: {remote_agent.api_resource.name}")
 
 

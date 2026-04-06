@@ -6,15 +6,19 @@ import re
 import subprocess
 import sys
 from dotenv import load_dotenv
+from absl import flags
+
+FLAGS = flags.FLAGS
 
 load_dotenv()
 
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "1"
-os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
-os.environ.setdefault(
-    "GOOGLE_CLOUD_PROJECT",
-    os.getenv("GOOGLE_CLOUD_PROJECT", "p3rf-code-assist"),
-)
+if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
+  print("Error: GOOGLE_CLOUD_LOCATION must be set in environment or .env file.")
+  sys.exit(1)
+if not os.environ.get("GOOGLE_CLOUD_PROJECT"):
+  print("Error: GOOGLE_CLOUD_PROJECT must be set in environment or .env file.")
+  sys.exit(1)
 os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = "false"
 
 sys.path.append(
@@ -64,13 +68,13 @@ def setup_environment(datum: dict):
   # Or look for requirements.txt
   if os.path.exists(os.path.join("workspace_repo", "requirements.txt")):
     subprocess.run(
-        [pip_path, "install", "-r", "requirements.txt"],
+        [pip_path, "install", "--index-url", "https://pypi.org/simple", "-r", "requirements.txt"],
         cwd="workspace_repo",
         check=False,
     )
   else:
     subprocess.run(
-        [pip_path, "install", "-e", "."], cwd="workspace_repo", check=False
+        [pip_path, "install", "--index-url", "https://pypi.org/simple", "-e", "."], cwd="workspace_repo", check=False
     )
 
   # 3. Checkout base_commit for the agent run
@@ -80,21 +84,35 @@ def setup_environment(datum: dict):
   )
 
 
-async def main():
+async def run_agent_flow():
+  try:
+    remote = FLAGS.remote
+    agent_engine_id = FLAGS.agent_engine_id
+  except AttributeError as e:
+    print(f"Error: Flags not initialized properly: {e}")
+    sys.exit(1)
+
+  if remote and not agent_engine_id:
+    print("Error: --agent_engine_id must be provided for remote runs.")
+    sys.exit(1)
+
   # Cleanup old files
   for f in ["agent_tool_log.txt", "agent_result_branch.txt"]:
     if os.path.exists(f):
       os.remove(f)
 
-  datum_path = os.environ.get("SWEBENCH_DATUM_PATH", "swe_bench_datum.json")
+  datum_path = os.environ.get("SWEBENCH_DATUM_PATH", "swebench_datum.json")
   if not os.path.exists(datum_path):
-    print(f"Error: SWE-bench datum file not found at {datum_path}")
-    return
+    # Try looking in specific directory
+    alt_datum_path = "coding_agent_swe_bench/swebench_datum.json"
+    if os.path.exists(alt_datum_path):
+        datum_path = alt_datum_path
+    else:
+        print(f"Error: SWE-bench datum file not found at {datum_path}")
+        return
 
   with open(datum_path, "r") as f:
     datum = json.load(f)
-
-  # setup_environment(datum) # Delegated to agent
 
   repo = datum.get("repo")
   base_commit = datum.get("base_commit")
@@ -131,35 +149,15 @@ Solve the following issue:
 {problem_statement}
 """
 
-  import argparse
-
-  parser = argparse.ArgumentParser(
-      description="Run the SWE-bench coding agent."
-  )
-  parser.add_argument(
-      "--remote",
-      action="store_true",
-      help="Run remotely using Vertex AI Agent Engine.",
-  )
-  parser.add_argument(
-      "--agent_engine_id",
-      type=str,
-      default="6153237054697242624",
-      help="The Agent Engine resource ID to use for remote runs.",
-  )
-  # Parse unknown args to avoid crashing if run via a test harness
-  args, _ = parser.parse_known_args()
-
   project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
   location = os.environ["GOOGLE_CLOUD_LOCATION"]
-  agent_engine_id = args.agent_engine_id if args.remote else None
 
   try:
     with open("agent_tool_log.txt", "a") as log_file:
       log_file.write(f"--- Starting Agent Run ---\n")
       log_file.write(f"Current time: {datetime.now()}\n")
 
-      if not agent_engine_id:
+      if not remote:
         # Local execution
         from google.adk.runners import Runner
         from google.adk.sessions.in_memory_session_service import InMemorySessionService
@@ -234,12 +232,10 @@ Solve the following issue:
           print("\n[Warning] No RESULT_BRANCH found in agent output.")
 
   except Exception as e:
-    import traceback
-
     print(f"Agent execution crashed:")
     traceback.print_exc()
     raise e
 
 
-if __name__ == "__main__":
-  asyncio.run(main())
+
+

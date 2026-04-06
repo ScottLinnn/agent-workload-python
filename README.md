@@ -67,3 +67,29 @@ Run the `coding_agent` task using the LangGraph framework:
 ```bash
 python main.py --task coding_agent --framework langgraph
 ```
+
+## Remote Agent Execution
+
+`coding_agent_swe_bench` has been updated for deloying and running on Vertex Agent Engine.
+
+The agent will clone the repository specified by the datum(currently only `swebench_test_repo_v5.json` works) using github deloy key, addressing the issue, and pushing
+the changes to a remote branch. The evaluator will then pull the changes and run tests against them.
+
+Workflow:
+
+1. **Deploy the Agent**:
+   Run the deployment script. Remember to set up `.env` with `GITHUB_DEPLOY_KEY` for the repository you want the agent to work on.
+
+   ```bash
+   python coding_agent_swe_bench/adk/deploy_agent.py
+   ```
+
+   The agent ID will be in the output.
+
+2. **Run the Agent**:
+   Run the agent using the `--remote` flag and providing the agent ID:
+
+   ```bash
+   python3 main.py --task=coding_agent_swe_bench --framework=adk --remote --agent_engine_id=xxx
+   ```
+

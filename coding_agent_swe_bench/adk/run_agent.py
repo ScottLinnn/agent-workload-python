@@ -101,15 +101,17 @@ async def run_agent_flow():
     if os.path.exists(f):
       os.remove(f)
 
-  datum_path = os.environ.get("SWEBENCH_DATUM_PATH", "swebench_datum.json")
+  datum_path = os.environ.get(
+      "SWEBENCH_DATUM_PATH", "swebench_test_repo_v5.json"
+  )
   if not os.path.exists(datum_path):
     # Try looking in specific directory
-    alt_datum_path = "coding_agent_swe_bench/swebench_datum.json"
+    alt_datum_path = "coding_agent_swe_bench/swebench_test_repo_v5.json"
     if os.path.exists(alt_datum_path):
-        datum_path = alt_datum_path
+      datum_path = alt_datum_path
     else:
-        print(f"Error: SWE-bench datum file not found at {datum_path}")
-        return
+      print(f"Error: SWE-bench datum file not found at {datum_path}")
+      return
 
   with open(datum_path, "r") as f:
     datum = json.load(f)
@@ -138,7 +140,13 @@ Before solving the issue, you MUST set up the environment by performing the foll
 8. Check out the base commit `{base_commit}` for the actual agent run.
 
 After you have solved the issue and made a commit:
-1. Create a dynamic branch name (e.g., fix-agent-<random-id>). You can simply invent a random number in your head (e.g., 4827) and use it. You do not need to use a tool or python to generate it.
+1. Create a dynamic branch name that includes:
+   - The framework name: "adk"
+   - What issue it's fixing (e.g., a short keyword describing the fix).
+   - A random number.
+   - Example: `adk-fix-missing-colon-4827`
+   - If the branch name already exists on remote, reinvent a new random number and try again.
+   You can simply invent a random number in your head (e.g., 4827) and use it. You do not need to use a tool or python to generate it.
 2. Checkout that branch.
 3. Push the branch to remote origin using the deploy key.
    - Example: `GIT_SSH_COMMAND="ssh -i /tmp/deploy_key -o StrictHostKeyChecking=no" git push origin <branch_name>`
@@ -235,7 +243,3 @@ Solve the following issue:
     print(f"Agent execution crashed:")
     traceback.print_exc()
     raise e
-
-
-
-

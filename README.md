@@ -75,8 +75,6 @@ python main.py --task coding_agent --framework langgraph
 The agent will clone the repository specified by the datum(currently only `swebench_test_repo_v5.json` works) using github deloy key, address the issue, and push
 the changes to a remote branch. The evaluator will then pull the changes and run tests against them.
 
-Currently only ADK is supported.
-
 Workflow:
 
 1. **Deploy the Agent**:

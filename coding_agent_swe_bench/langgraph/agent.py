@@ -1,42 +1,30 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
-import os
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.memory import MemorySaver
-
-from coding_agent.tools import ALL_TOOLS
-
-# Initialize the model using Vertex AI
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    vertexai=True,
-    project=os.environ.get('GOOGLE_CLOUD_PROJECT'),
-    location=os.environ.get('GOOGLE_CLOUD_LOCATION', 'us-central1')
-)
+from vertexai import agent_engines
+from coding_agent_swe_bench.tools import ALL_TOOLS
 
 system_message = """
 You are a coding agent with actual system execution permissions. 
-Crucial: Your work area is the `PerfKitBenchmarker` directory inside the current workspace. 
+Crucial: Your work area is the `workspace_repo` directory inside the current workspace. 
 The root workspace is the host repo for the agent, and its history must NOT be polluted by your work.
-Always use the repository folder `PerfKitBenchmarker` for all git operations, code searches, file edits, and test runs. 
-When using tools like `run_shell_command`, specify `cwd="PerfKitBenchmarker"` or `cd` into it (e.g., `cd PerfKitBenchmarker && ...`).
-The repository's issues can be searched or fetched from: `https://github.com/GoogleCloudPlatform/PerfKitBenchmarker/issues`.
+Always use the repository folder `workspace_repo` for all git operations, code searches, file edits, and test runs ONCE IT IS CREATED.
+When using tools like `run_shell_command`, specify `cwd="workspace_repo"` or `cd` into it (e.g., `cd workspace_repo && ...`).
+
+Your first priority is to set up the environment as instructed in your initial prompt.
+DO NOT attempt to solve the issue until the environment is fully set up.
+Note: You do NOT need to apply any test patches; that is handled by the evaluator.
 
 Your recursive master loop operates as follows:
-1. Check if a progress tracking file `resolved_issue.md` exists using `read_file`.
-2. If it does not exist, use `fetch_webpage` (or `search_web` if the page is unreadable) to find an open issue. Describe the issue **AND its URL link** and write it to a newly created `resolved_issue.md` on the root of your workspace to act as your persistent memory.
-3. Initialize (or append to) `execution_history.md` to document every tool call you make and every loop iteration. This acts as your trace log.
-4. Pick exactly one failing constraint or bug from that issue.
-5. Search for the relevant codebase files using `find_files` or `search_content` inside the workspace (use `cwd='PerfKitBenchmarker'`).
-6. Write the required code for the fix (using `create_file` or `edit_code`, prepending the `PerfKitBenchmarker` directory to file paths if necessary).
-7. **Crucial:** Add or run automated tests for the fix (using `run_shell_command` with `cwd="PerfKitBenchmarker"`).
-8. Update `resolved_issue.md` to mark the feature as complete.
-9. Update `execution_history.md` with the tool call and output.
-10. Make a Git commit with a descriptive message (using `run_shell_command("git commit -m ...", cwd="PerfKitBenchmarker")`).
+1. Initialize (or append to) `execution_history.md` to document every tool call you make and every loop iteration. This acts as your trace log.
+2. IF the environment is not yet set up, perform the setup steps (clone, checkout, install) exactly as described in your initial prompt.
+3. Search for the relevant codebase files using `find_files` or `search_content` inside the workspace (use `cwd='workspace_repo'`).
+4. Write the required code for the fix (using `create_file` or `edit_code`, prepending the `workspace_repo` directory to file paths if necessary).
+5. **Crucial:** Add or run automated tests for the fix (using `run_shell_command` with `cwd="workspace_repo"`).
+6. Update `execution_history.md` with the tool call and output.
+7. Make a Git commit with a descriptive message (using `run_shell_command("git commit -m ...", cwd="workspace_repo")`).
 """
 
-# Dynamic tool delegation is natively handled by create_react_agent when passed a list of tools
-coding_agent_langgraph = create_react_agent(llm, ALL_TOOLS, checkpointer=MemorySaver(), prompt=system_message)
-
-# Keep variables for the runner script
-WORKSPACE_FILES = {}
-GIT_LOG = []
+# Define the LangGraph agent using the template for Vertex AI Agent Engine
+coding_agent_langgraph = agent_engines.LanggraphAgent(
+    model="gemini-2.5-flash",
+    tools=ALL_TOOLS,
+    runnable_kwargs={"prompt": system_message},
+)

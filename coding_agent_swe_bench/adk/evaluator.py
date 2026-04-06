@@ -208,10 +208,10 @@ async def evaluate() -> bool:
     )
     return False
 
-  datum_path = os.environ.get("SWEBENCH_DATUM_PATH", "swebench_datum.json")
+  datum_path = os.environ.get("SWEBENCH_DATUM_PATH", "swebench_test_repo_v5.json")
   if not os.path.exists(datum_path):
     # Try looking in specific directory if found in ls -R earlier
-    alt_datum_path = "coding_agent_swe_bench/swebench_datum.json"
+    alt_datum_path = "coding_agent_swe_bench/swebench_test_repo_v5.json"
     if os.path.exists(alt_datum_path):
       datum_path = alt_datum_path
     else:

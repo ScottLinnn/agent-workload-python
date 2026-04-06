@@ -103,8 +103,8 @@ def main(argv):
     # Validation for remote
     if FLAGS.remote:
         valid = True
-        if FLAGS.framework != "adk":
-             print("Validation Error: Remote execution requires framework to be 'adk'.")
+        if FLAGS.framework not in ["adk", "langgraph"]:
+             print("Validation Error: Remote execution requires framework to be 'adk' or 'langgraph'.")
              valid = False
         if FLAGS.task != "coding_agent_swe_bench":
              print("Validation Error: Remote execution requires task to be 'coding_agent_swe_bench'.")

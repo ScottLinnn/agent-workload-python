@@ -50,7 +50,7 @@ python main.py --task <task_name> --framework <framework_name>
   - `financial_model_updater`
   - `itinerary_planner`
   - `coding_agent`
-  - 'data_science
+  - `data_science`
 - `--framework`: The framework to use for the agent. Supported frameworks:
   - `adk` (Google Agent Development Kit)
   - `langgraph`

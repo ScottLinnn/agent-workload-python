@@ -106,8 +106,8 @@ def main(argv):
         if FLAGS.framework not in ["adk", "langgraph"]:
              print("Validation Error: Remote execution requires framework to be 'adk' or 'langgraph'.")
              valid = False
-        if FLAGS.task != "coding_agent_swe_bench":
-             print("Validation Error: Remote execution requires task to be 'coding_agent_swe_bench'.")
+        if FLAGS.task not in ["coding_agent_swe_bench", "data_science"]:
+             print("Validation Error: Remote execution requires task to be 'coding_agent_swe_bench' or 'data_science'.")
              valid = False
         if not FLAGS.agent_engine_id:
              print("Validation Error: Remote execution requires agent_engine_id to be supplied.")

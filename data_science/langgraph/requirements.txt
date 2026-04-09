@@ -1,0 +1,14 @@
+langchain-google-genai
+langgraph
+langchain
+google-cloud-aiplatform[agent_engines]
+google-genai
+python-dotenv
+cloudpickle
+pydantic
+duckdb
+pandas
+matplotlib
+seaborn
+numpy
+google-cloud-storage

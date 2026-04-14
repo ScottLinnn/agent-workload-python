@@ -1,8 +1,11 @@
+"""Script to deploy the data science agent to Vertex AI Agent Engine."""
+
 import asyncio
 import os
 import sys
 import random
 import string
+import subprocess
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,45 +17,75 @@ if "GOOGLE_CLOUD_LOCATION" not in os.environ:
   raise ValueError("GOOGLE_CLOUD_LOCATION environment variable must be set")
 os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = "false"
 
-# Add repo root to path
-ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if ROOT_PATH not in sys.path:
-    sys.path.append(ROOT_PATH)
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+)
 
 import vertexai
-from data_science.adk.deploy_agent import prep_databases
+from data_science.langgraph.agent import MyCustomLanggraphAgent
 
-class SimpleLangGraphAgent:
-    """A custom agent that wraps a LangGraph graph."""
+def generate_random_id(length=6):
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
 
-    def __init__(self):
-        pass
+def prep_databases():
+    project_id = os.environ["GOOGLE_CLOUD_PROJECT"]
+    random_id = generate_random_id()
+    bucket_name = "experiment-data-science-agent-db-bucket"
+    prefix = f"langgraph_{random_id}"
+    
+    print(f"Using bucket: {bucket_name} with prefix: {prefix}")
 
-    def set_up(self):
-        print("Setting up SimpleLangGraphAgent in cloud...")
-        from data_science.langgraph.agent import compiled_graph
-        self.graph = compiled_graph
-        print("Graph compiled and loaded.")
+    # Grant access to Agent Engine service account (idempotent)
+    sa_email = "service-390454992652@gcp-sa-aiplatform-re.iam.gserviceaccount.com"
+    print(f"Granting storage.objectAdmin to {sa_email} on {bucket_name}")
+    try:
+        subprocess.run(
+            ["gcloud", "storage", "buckets", "add-iam-policy-binding", f"gs://{bucket_name}",
+             f"--member=serviceAccount:{sa_email}", "--role=roles/storage.objectAdmin"],
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to add IAM policy binding: {e}")
+        print("Continuing anyway, assuming permissions might be sufficient.")
 
-    async def query(self, input: str) -> str:
-        from langchain_core.messages import HumanMessage
+    # Generate mock data
+    from data_science.mock_data_gen import generate_mock_data
+    generate_mock_data()
+    
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_dir = os.path.join(base_path, 'data')
+    
+    duckdb_path = os.path.join(data_dir, 'logistics_analytical.db')
+    sqlite_path = os.path.join(data_dir, 'logistics_transactional.db')
+    
+    print(f"Uploading files to gs://{bucket_name}/{prefix}/")
+    try:
+        subprocess.run(
+            ["gcloud", "storage", "cp", duckdb_path, f"gs://{bucket_name}/{prefix}/"],
+            check=True
+        )
+        subprocess.run(
+            ["gcloud", "storage", "cp", sqlite_path, f"gs://{bucket_name}/{prefix}/"],
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to upload files: {e}")
+        raise e
         
-        print(f"Querying agent with input: {input}")
-        
-        initial_state = {
-            "messages": [HumanMessage(content=input)],
-            "current_agent": "supervisor",
-            "data_context": "",
-            "plot_paths": []
-        }
-        
-        print("Invoking graph...")
-        result = await self.graph.ainvoke(initial_state)
-        print("Graph invocation completed.")
-        
-        if "messages" in result and result["messages"]:
-             return result["messages"][-1].content
-        return "No result"
+    return bucket_name, prefix
+
+def my_runnable_builder(model, **kwargs):
+    from data_science.langgraph.agent import create_graph
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    import os
+    
+    llm = ChatGoogleGenerativeAI(
+        model=model,
+        vertexai=True,
+        project=os.environ.get('GOOGLE_CLOUD_PROJECT'),
+        location=os.environ.get('GOOGLE_CLOUD_LOCATION', 'us-central1')
+    )
+    return create_graph(llm)
 
 async def main():
   vertexai.init(
@@ -60,23 +93,16 @@ async def main():
       location=os.environ["GOOGLE_CLOUD_LOCATION"],
   )
 
-  # Reuse database prep from ADK
   bucket_name, prefix = prep_databases()
 
-  print("Deploying Custom LangGraph data_science_agent to Vertex AI Agent Engine...")
+  print("Deploying data_science_agent (LangGraph) to Vertex AI Agent Engine...")
   client = vertexai.Client()
 
-  def generate_random_id(length=6):
-    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
-
   config = {
-      "staging_bucket": f"gs://vertex-agent-engine-staging-lg-agent-{generate_random_id()}",
+      "staging_bucket": f"gs://vertex-agent-engine-staging-ds-agent-{generate_random_id()}",
       "requirements": [
           "google-cloud-aiplatform[agent_engines]",
-          "langgraph",
-          "langchain-core",
-          "langchain-google-genai",
-          "langchain-google-vertexai",
+          "google-genai",
           "python-dotenv",
           "cloudpickle",
           "pydantic",
@@ -86,6 +112,12 @@ async def main():
           "seaborn",
           "numpy",
           "google-cloud-storage",
+          "langgraph",
+          "langchain",
+          "langchain-google-genai",
+          "langchain-google-vertexai",
+          "langchain-core",
+          "nest-asyncio",
       ],
       "extra_packages": [
           "data_science",
@@ -97,7 +129,10 @@ async def main():
       }
   }
 
-  agent = SimpleLangGraphAgent()
+  agent = MyCustomLanggraphAgent(
+      model="gemini-2.5-flash",
+      runnable_builder=my_runnable_builder,
+  )
 
   remote_agent = client.agent_engines.create(
       agent=agent,

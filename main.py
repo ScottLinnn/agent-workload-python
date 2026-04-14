@@ -55,11 +55,24 @@ def run_task(task, framework):
             print(f"Error: LangGraph version of {task} does not exist.")
             return False
             
-        # For LangGraph, we run run_agent and then evaluation from adk
+        # For LangGraph, we run run_agent and then evaluation from langgraph if exists, else adk
         run_agent_module_path = f"{task}.langgraph.run_agent"
-        eval_module_path = f"{task}.adk.evaluator"
+        eval_module_path = f"{task}.langgraph.evaluator"
+        if not os.path.exists(os.path.join(REPO_ROOT, task, "langgraph", "evaluator.py")):
+            eval_module_path = f"{task}.adk.evaluator"
         
         try:
+            print(f"--- Phase 00: Cleaning up old results ---")
+            results_dir = os.path.join(os.getcwd(), f"{framework}_{task}_results")
+            import shutil
+            if os.path.exists(results_dir):
+                print(f"Deleting old results directory: {results_dir}")
+                shutil.rmtree(results_dir)
+
+            print(f"--- Phase 0: Generating Mock Data ---")
+            from data_science.mock_data_gen import generate_mock_data
+            generate_mock_data()
+            
             print(f"--- Phase 1: Running {task} (LangGraph) ---")
             run_module = importlib.import_module(run_agent_module_path)
             # Some uses 'main(argv)', some uses 'run()'

@@ -12,3 +12,5 @@ langchain-community
 langchain-openai
 duckduckgo-search
 python-dotenv
+lancedb
+pyarrow

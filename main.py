@@ -106,34 +106,47 @@ def run_task(task, framework):
             return False
 
 def main(argv):
-    if not FLAGS.task:
-        print("Error: --task flag is required.")
-        sys.exit(1)
-    if not FLAGS.framework:
-        print("Error: --framework flag is required.")
-        sys.exit(1)
+  if not FLAGS.task:
+    print("Error: --task flag is required.")
+    sys.exit(1)
+  if not FLAGS.framework:
+    print("Error: --framework flag is required.")
+    sys.exit(1)
 
-    # Validation for remote
-    if FLAGS.remote:
-        valid = True
-        if FLAGS.framework not in ["adk", "langgraph"]:
-             print("Validation Error: Remote execution requires framework to be 'adk' or 'langgraph'.")
-             valid = False
-        if FLAGS.task not in ["coding_agent_swe_bench", "data_science"]:
-             print("Validation Error: Remote execution requires task to be 'coding_agent_swe_bench' or 'data_science'.")
-             valid = False
-        if not FLAGS.agent_engine_id:
-             print("Validation Error: Remote execution requires agent_engine_id to be supplied.")
-             valid = False
-             
-        if not valid:
-             print("Notice: More frameworks and more tasks will be supported in the future.")
-             sys.exit(1)
+  # Validation for remote
+  if FLAGS.remote:
+    valid = True
+    if FLAGS.framework not in ["adk", "langgraph"]:
+      print(
+          "Validation Error: Remote execution requires framework to be 'adk' or"
+          " 'langgraph'."
+      )
+      valid = False
+    if FLAGS.task not in [
+        "coding_agent_swe_bench",
+        "data_science",
+        "agentic_rag",
+    ]:
+      print(
+          "Validation Error: Remote execution requires task to be"
+          " 'coding_agent_swe_bench', 'data_science', or 'agentic_rag'."
+      )
+      valid = False
+    if not FLAGS.agent_engine_id:
+      print(
+          "Validation Error: Remote execution requires agent_engine_id to be"
+          " supplied."
+      )
+      valid = False
 
-    if run_task(FLAGS.task, FLAGS.framework):
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    if not valid:
+      print("Notice: More frameworks and more tasks will be supported in the future.")
+      sys.exit(1)
+
+  if run_task(FLAGS.task, FLAGS.framework):
+    sys.exit(0)
+  else:
+    sys.exit(1)
 
 if __name__ == "__main__":
     app.run(main)

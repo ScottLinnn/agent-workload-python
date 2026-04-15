@@ -14,3 +14,4 @@ duckduckgo-search
 python-dotenv
 lancedb
 pyarrow
+google-cloud-storage

@@ -1,0 +1,7 @@
+{
+  "final_response": "The drone deployed for 'Operation Night Owl' is the AeroScout X-4, which uses a customized lithium-sulfur power cell designated as Model LS-900. However, the exact battery capacity in mAh for this power cell is not provided in the available information. GCS_PATH: gs://bucket/prefix/final_answer.json",
+  "citations": [
+    "sample_0.txt",
+    "sample_1.txt"
+  ]
+}

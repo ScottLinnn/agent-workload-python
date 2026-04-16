@@ -70,8 +70,16 @@ def run_task(task, framework):
                 shutil.rmtree(results_dir)
 
             print(f"--- Phase 0: Generating Mock Data ---")
-            from data_science.mock_data_gen import generate_mock_data
-            generate_mock_data()
+            try:
+                mock_data_module = importlib.import_module(f"{task}.langgraph.mock_data_gen")
+                if hasattr(mock_data_module, 'generate_mock_data'):
+                    mock_data_module.generate_mock_data()
+                else:
+                    print(f"Warning: generate_mock_data not found in {task}.langgraph.mock_data_gen")
+            except ImportError:
+                print(f"Warning: No mock_data_gen found for {task}. Falling back to data_science mock data.")
+                from data_science.mock_data_gen import generate_mock_data
+                generate_mock_data()
             
             print(f"--- Phase 1: Running {task} (LangGraph) ---")
             run_module = importlib.import_module(run_agent_module_path)

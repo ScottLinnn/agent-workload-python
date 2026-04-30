@@ -44,29 +44,25 @@ python main.py --task <task_name> --framework <framework_name>
 ### Arguments
 
 - `--task`: The agentic task to run. Supported tasks:
-  - `bug_triage`
-  - `fact_finder`
-  - `fact_finder_real_web`
-  - `financial_model_updater`
-  - `itinerary_planner`
-  - `coding_agent`
+  - `coding_agent_swe_bench`
   - `data_science`
+  - `agentic_rag`
 - `--framework`: The framework to use for the agent. Supported frameworks:
   - `adk` (Google Agent Development Kit)
   - `langgraph`
 
 ### Examples
 
-Run the `fact_finder` task using the ADK framework:
+Run the `coding_agent_swe_bench` task using the ADK framework:
 
 ```bash
-python main.py --task fact_finder --framework adk
+python main.py --task coding_agent_swe_bench --framework adk
 ```
 
-Run the `coding_agent` task using the LangGraph framework:
+Run the `coding_agent_swe_bench` task using the LangGraph framework:
 
 ```bash
-python main.py --task coding_agent --framework langgraph
+python main.py --task coding_agent_swe_bench --framework langgraph
 ```
 
 ## Agent Deployemnt, Running and Evaluation

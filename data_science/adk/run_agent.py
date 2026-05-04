@@ -171,19 +171,23 @@ async def main():
 
     full_text = "".join(accumulated_output)
 
-    data_bucket = os.environ.get("DATA_BUCKET")
-    data_prefix = os.environ.get("DATA_PREFIX", "")
+    import re
 
-    if not data_bucket:
-      import re
+    bucket_matches = re.findall(r"GCS_BUCKET:\s*([a-zA-Z0-9_-]+)", full_text)
+    prefix_matches = re.findall(r"GCS_PREFIX:\s*([a-zA-Z0-9_/-]+)", full_text)
 
-      bucket_match = re.search(r"GCS_BUCKET:\s*([^\s\n]+)", full_text)
-      prefix_match = re.search(r"GCS_PREFIX:\s*([^\s\n]+)", full_text)
-      if bucket_match and prefix_match:
-        data_bucket = bucket_match.group(1)
-        data_prefix = prefix_match.group(1)
-        print(f"Parsed bucket from agent output: {data_bucket}")
-        print(f"Parsed prefix from agent output: {data_prefix}")
+    data_bucket = bucket_matches[-1] if bucket_matches else None
+    data_prefix = prefix_matches[-1] if prefix_matches else ""
+
+    if data_bucket:
+      print(f"Parsed bucket from agent output: {data_bucket}")
+      print(f"Parsed prefix from agent output: {data_prefix}")
+    else:
+      data_bucket = os.environ.get("DATA_BUCKET")
+      data_prefix = os.environ.get("DATA_PREFIX", "")
+      if data_bucket:
+        print(f"Using bucket from environment: {data_bucket}")
+        print(f"Using prefix from environment: {data_prefix}")
 
     if data_bucket:
       print(
